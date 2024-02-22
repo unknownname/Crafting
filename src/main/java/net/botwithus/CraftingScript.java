@@ -173,6 +173,7 @@ public class CraftingScript extends LoopingScript {
             println("Bank is open");
             Bank.depositAllExcept(54004);
             botState = BotState.SKILLING;
+            return random.nextLong(1000,3000);
         }
         if (player.getCoordinate().getRegionId() != 13105)
         {
@@ -213,6 +214,7 @@ public class CraftingScript extends LoopingScript {
             println("Bank is open");
             Bank.depositAllExcept(54004);
             botState = BotState.SKILLING;
+            return random.nextLong(1000,3000);
         }
         if (player.getCoordinate().getRegionId() != 13214)
         {
