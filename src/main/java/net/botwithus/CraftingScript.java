@@ -4,6 +4,7 @@ import net.botwithus.api.game.hud.inventories.Backpack;
 import net.botwithus.api.game.hud.inventories.Bank;
 import net.botwithus.api.game.hud.traversal.Lodestone;
 import net.botwithus.internal.scripts.ScriptDefinition;
+import net.botwithus.rs3.events.impl.InventoryUpdateEvent;
 import net.botwithus.rs3.game.Area;
 import net.botwithus.rs3.game.Client;
 import net.botwithus.rs3.game.Coordinate;
@@ -18,10 +19,12 @@ import net.botwithus.rs3.script.Execution;
 import net.botwithus.rs3.script.LoopingScript;
 import net.botwithus.rs3.script.config.ScriptConfig;
 import net.botwithus.rs3.game.*;
+import net.botwithus.rs3.util.Regex;
 
 
-
+import java.time.Instant;
 import java.util.Random;
+import java.util.regex.Pattern;
 
 
 public class CraftingScript extends LoopingScript {
@@ -31,12 +34,18 @@ public class CraftingScript extends LoopingScript {
     private boolean someBool1 = true;
     private Random random = new Random();
 
+    public long scriptStartTime = System.currentTimeMillis();
+
+    public int GemMined  = 0;
+    public int GemMinedPerHour = 0;
 
     private Area AlKharid = new Area.Rectangular(new Coordinate(3274,3168,0), new Coordinate(3267,3171,0));
     private Area AlKharid1 = new Area.Rectangular(new Coordinate(3301,3284,0), new Coordinate(3306,3274,0));
     private Area AlKharid2 = new Area.Rectangular(new Coordinate(3301,3241,0), new Coordinate(3306,3231,0));
     private Area AlKharid3 = new Area.Rectangular(new Coordinate(3301,3206,0), new Coordinate(3304,3197,0));
     private Area AlKharid4 = new Area.Rectangular(new Coordinate(3289,3181,0), new Coordinate(3295,3181,0));
+
+    private Pattern Gems = Regex.getPatternForContainingOneOf("Uncut ruby", "Uncut sapphire", "Uncut emerald");
 
 
     enum BotState {
@@ -51,6 +60,9 @@ public class CraftingScript extends LoopingScript {
     public CraftingScript(String s, ScriptConfig scriptConfig, ScriptDefinition scriptDefinition) {
         super(s, scriptConfig, scriptDefinition);
         this.sgc = new CraftingScriptGraphicsContext(getConsole(), this);
+
+
+        GemMined();
     }
 
     @Override
@@ -71,9 +83,9 @@ public class CraftingScript extends LoopingScript {
                 Execution.delay(random.nextLong(1000,3000));
             }
             case SKILLING -> {
+
                 //do some code that handles your skilling
-                //println("Area ID: "+ player.getCoordinate().getRegionId());
-                //println("Area ID: "+ someBool1);
+                //scriptStartTime = Instant.now();
                 if(someBool1 !=true) {
                     Execution.delay(handleskillingwithoutseed(player));
                 }
@@ -189,7 +201,46 @@ public class CraftingScript extends LoopingScript {
         }
     }
 
+    public void GemMined()
+    {
+        subscribe(InventoryUpdateEvent.class, inventoryUpdateEvent -> {
+            Item item = inventoryUpdateEvent.getNewItem();
+            //println("New Item in Inventory: " + item);
+            if (item != null) {
+                if (item.getInventoryType().getId() != 93) {
+                    return;
+                }
+                String runeName = item.getName();
+                //println("Rune Name:" + runeName);
+                if (runeName != null) {
+                    if (runeName.equalsIgnoreCase("Uncut ruby")) {
+                        GemMined = GemMined + item.getStackSize();
+                        //println("Number of Gem Mined: " + GemMined);
+                        //println("Number of items crated" + numberofrunecrated);
+                        //equalsIgnoreCase(options[currentItem]
+                    }
+                    if (runeName.equalsIgnoreCase("Uncut sapphire")) {
+                        GemMined = GemMined + item.getStackSize();
+                        //println("Number of Gem Mined: " + GemMined);
+                        //println("Number of items crated" + numberofrunecrated);
+                        //equalsIgnoreCase(options[currentItem]
+                    }
+                    if (runeName.equalsIgnoreCase("Uncut emerald")) {
+                        GemMined = GemMined + item.getStackSize();
+                        //println("Number of Gem Mined: " + GemMined);
+                        //println("Number of items crated" + numberofrunecrated);
+                        //equalsIgnoreCase(options[currentItem]
+                    }
+                }
 
+            }
+            long currenttime = (System.currentTimeMillis() - scriptStartTime) /1000;
+            GemMinedPerHour = (int)(Math.round(3600.0 / currenttime * GemMined));
+            //println(" Gem's Mined Per Hour: " + GemMinedPerHour);
+
+        });
+
+    }
     private long handleBanking(LocalPlayer player)
     {
         println("War Unlock state" + someBool);
@@ -272,7 +323,7 @@ public class CraftingScript extends LoopingScript {
         return random.nextLong(2000,3000);
     }
 
-    private long GemMining(LocalPlayer player)
+    private long GemMining()
     {
         if (Skills.MINING.getLevel() <20)
         {
@@ -313,7 +364,7 @@ public class CraftingScript extends LoopingScript {
         {
 
             println("StamFix");
-            GemMining(player);
+            GemMining();
 
         }
 
@@ -337,7 +388,7 @@ public class CraftingScript extends LoopingScript {
              }
 
          }
-        GemMining(player);
+        GemMining();
 
 
         return random.nextLong(1500,3000);
@@ -357,7 +408,7 @@ public class CraftingScript extends LoopingScript {
         {
 
             println("StamFix");
-            GemMining(player);
+            GemMining();
 
         }
         if (player.getAnimationId() != -1 || player.isMoving() && player.getCoordinate().getRegionId() == 13107){
@@ -388,7 +439,7 @@ public class CraftingScript extends LoopingScript {
             WalkToAlKharidMine(player);
             return random.nextLong(3000,5000);
         }
-        GemMining(player);
+        GemMining();
         return random.nextLong(2000,3000);
     }
 
